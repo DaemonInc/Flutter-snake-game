@@ -1,0 +1,4 @@
+enum GameOverlays {
+  pauseMenu,
+  gameOverMenu,
+}
