@@ -24,6 +24,8 @@ class SnakeGame extends FlameGame with SingleGameInstance {
   late final _background = GridBackground(gridSize: config.gridSize);
   late final Snake _snake;
 
+  double _timeSinceLastMove = 0;
+
   @override
   FutureOr<void> onLoad() {
     final start = (config.gridSize ~/ 2).toVector2() -
@@ -31,7 +33,6 @@ class SnakeGame extends FlameGame with SingleGameInstance {
     final segments = [
       for (int i = 0; i < config.snakeStartLength; i++)
         start + Vector2(0, i.toDouble()),
-      start + Vector2(1, (config.snakeStartLength - 1).toDouble())
     ];
 
     final segmentSize = Size(
@@ -48,10 +49,21 @@ class SnakeGame extends FlameGame with SingleGameInstance {
   void render(Canvas canvas) {
     _background.paint(canvas, boardSize);
     _snake.paint(canvas, boardSize);
+    super.render(canvas);
   }
 
   @override
   void update(double dt) {
-    // TODO: implement update
+    _timeSinceLastMove += dt;
+    if (_timeSinceLastMove < config.moveStep) {
+      return;
+    }
+
+    _timeSinceLastMove = _timeSinceLastMove % config.moveStep;
+
+    _snake.move();
+    final alive = _snake.checkAlive(boardSize);
+    print('Snake is alive: $alive');
+    super.update(dt);
   }
 }
