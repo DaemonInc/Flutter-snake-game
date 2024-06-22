@@ -1,10 +1,11 @@
 import 'package:flame/extensions.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_snake_game/services/game_service.dart';
 
 class GridBackground extends CustomPainter {
-  GridBackground({required this.gridSize});
+  GridBackground();
 
-  final Vector2 gridSize;
+  Vector2 get gridSize => GameService.instance.config.gridSize;
 
   @override
   void paint(Canvas canvas, Size size) {

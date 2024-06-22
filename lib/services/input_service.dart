@@ -8,13 +8,17 @@ import 'package:flutter_snake_game/extensions/vector2_extensions.dart';
 import 'package:flutter_snake_game/services/game_service.dart';
 
 class InputService {
-  GameService? _game;
+  static InputService? _instance;
+  static InputService get instance {
+    _instance ??= InputService();
+    return _instance!;
+  }
 
   Direction? _currentDirection;
   Direction? get currentDirection => _currentDirection;
 
-  void initialize(GameService game) {
-    _game = game;
+  void reset() {
+    _currentDirection = null;
   }
 
   KeyEventResult? handleKeyInput(
@@ -54,6 +58,8 @@ class InputService {
         _currentDirection = Direction.right;
         break;
       case Inputs.pause:
+        GameService.instance.togglePause();
+        break;
     }
   }
 }

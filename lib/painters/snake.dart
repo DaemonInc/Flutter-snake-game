@@ -4,6 +4,8 @@ import 'package:flame/extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_snake_game/enums/direction.dart';
 import 'package:flutter_snake_game/extensions/vector2_extensions.dart';
+import 'package:flutter_snake_game/services/game_service.dart';
+import 'package:flutter_snake_game/services/input_service.dart';
 
 class Snake extends CustomPainter {
   Snake({
@@ -20,7 +22,9 @@ class Snake extends CustomPainter {
   late Direction _direction;
 
   /// Moves the snake by one segment in its current direction
-  void move([Direction? direction]) {
+  void move() {
+    final direction = InputService.instance.currentDirection;
+
     if (direction == null || direction == _direction.inverted) {
       _direction = ((segments.first) - segments.elementAt(1)).asDirection ??
           Direction.up;
@@ -35,12 +39,10 @@ class Snake extends CustomPainter {
   }
 
   /// Checks if the snake is out of bounds
-  bool _checkOutOfBounds(Size bounds) {
+  bool _checkOutOfBounds() {
+    final bounds = GameService.instance.config.gridSize;
     final head = segments.first;
-    return head.x < 0 ||
-        head.x >= bounds.width ||
-        head.y < 0 ||
-        head.y >= bounds.height;
+    return head.x < 0 || head.x >= bounds.x || head.y < 0 || head.y >= bounds.y;
   }
 
   /// Checks if the snake has collided with itself
@@ -56,8 +58,8 @@ class Snake extends CustomPainter {
   }
 
   /// Checks if the snake is alive
-  bool checkAlive(Size bounds) {
-    return !_checkOutOfBounds(bounds) && !_checkSelfCollision();
+  bool checkAlive() {
+    return !_checkOutOfBounds() && !_checkSelfCollision();
   }
 
   @override

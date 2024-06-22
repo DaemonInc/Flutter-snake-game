@@ -3,12 +3,7 @@ import 'package:flame/events.dart';
 import 'package:flutter_snake_game/services/input_service.dart';
 
 class DragInputDetector extends PositionComponent with DragCallbacks {
-  DragInputDetector({
-    required InputService inputService,
-  })  : _inputService = inputService,
-        super(anchor: Anchor.center);
-
-  final InputService _inputService;
+  DragInputDetector() : super(anchor: Anchor.center);
 
   @override
   void onGameResize(Vector2 size) {
@@ -19,7 +14,7 @@ class DragInputDetector extends PositionComponent with DragCallbacks {
 
   @override
   void onDragEnd(DragEndEvent event) {
-    _inputService.handleDragInput(event.velocity);
+    InputService.instance.handleDragInput(event.velocity);
     super.onDragEnd(event);
   }
 }

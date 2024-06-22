@@ -13,19 +13,22 @@ import 'package:flutter_snake_game/painters/snake.dart';
 import 'package:flutter_snake_game/services/input_service.dart';
 
 class GameService extends FlameGame with SingleGameInstance, KeyboardEvents {
-  GameService({
-    required GameConfig config,
-    required InputService inputService,
-  })  : _config = config,
-        _inputService = inputService {
-    inputService.initialize(this);
+  GameService._();
+
+  static GameService? _instance;
+  static GameService get instance {
+    _instance ??= GameService._();
+    return _instance!;
   }
 
-  final GameConfig _config;
-  final InputService _inputService;
+  GameConfig? _config;
+  GameConfig get config {
+    _config ??= GameConfig.normal();
+    return _config!;
+  }
 
-  late final _background = GridBackground(gridSize: _config.gridSize);
-  late final Snake _snake;
+  final GridBackground _background = GridBackground();
+  late Snake _snake;
 
   Size _boardSize = Size.zero;
   double _timeSinceLastMove = 0;
@@ -42,23 +45,27 @@ class GameService extends FlameGame with SingleGameInstance, KeyboardEvents {
 
   @override
   FutureOr<void> onLoad() {
-    add(DragInputDetector(inputService: _inputService));
+    add(DragInputDetector());
     pauseEngine();
     overlays.add(GameOverlays.startGameMenu.name);
 
+    _initSnake();
+
+    return super.onLoad();
+  }
+
+  void _initSnake() {
     final start = Vector2(
-      (_config.gridSize.x ~/ 2).toDouble(),
-      (_config.gridSize.y ~/ 2).toDouble() -
-          (_config.snakeStartLength ~/ 2).toDouble(),
+      (config.gridSize.x ~/ 2).toDouble(),
+      (config.gridSize.y ~/ 2).toDouble() -
+          (config.snakeStartLength ~/ 2).toDouble(),
     );
     final segments = [
-      for (int i = 0; i < _config.snakeStartLength; i++)
+      for (int i = 0; i < config.snakeStartLength; i++)
         start + Vector2(0, i.toDouble()),
     ];
 
-    _snake = Snake(segments: segments, gridSize: _config.gridSize);
-
-    return super.onLoad();
+    _snake = Snake(segments: segments, gridSize: config.gridSize);
   }
 
   @override
@@ -71,14 +78,14 @@ class GameService extends FlameGame with SingleGameInstance, KeyboardEvents {
   @override
   void update(double dt) {
     _timeSinceLastMove += dt;
-    if (_timeSinceLastMove < _config.moveStep) {
+    if (_timeSinceLastMove < config.moveStep) {
       return;
     }
 
-    _timeSinceLastMove = _timeSinceLastMove % _config.moveStep;
+    _timeSinceLastMove = _timeSinceLastMove % config.moveStep;
 
-    _snake.move(_inputService.currentDirection);
-    if (!_snake.checkAlive(_boardSize)) gameOver();
+    _snake.move();
+    if (!_snake.checkAlive()) gameOver();
 
     super.update(dt);
   }
@@ -88,11 +95,49 @@ class GameService extends FlameGame with SingleGameInstance, KeyboardEvents {
     KeyEvent event,
     Set<LogicalKeyboardKey> keysPressed,
   ) {
-    final result = _inputService.handleKeyInput(event, keysPressed);
+    final result = InputService.instance.handleKeyInput(event, keysPressed);
     if (result != null) {
       return result;
     }
     return super.onKeyEvent(event, keysPressed);
   }
 
+  void pauseGame() {
+    if (paused || _gameOver) return;
+    pauseEngine();
+    overlays.add(GameOverlays.pauseMenu.name);
+  }
+
+  void resumeGame() {
+    if (!paused || _gameOver) return;
+    resumeEngine();
+    overlays.removeAll(GameOverlays.values.map((e) => e.name).toList());
+  }
+
+  void togglePause() {
+    if (paused) {
+      resumeGame();
+    } else {
+      pauseGame();
+    }
+  }
+
+  void gameOver() {
+    _gameOver = true;
+    pauseEngine();
+    overlays.add(GameOverlays.gameOverMenu.name);
+  }
+
+  void startGame(GameConfig config) {
+    _reset();
+    resumeEngine();
+    overlays.removeAll(GameOverlays.values.map((e) => e.name).toList());
+  }
+
+  void _reset() {
+    InputService.instance.reset();
+    _gameOver = false;
+    _timeSinceLastMove = 0;
+    _initSnake();
+  }
 }
