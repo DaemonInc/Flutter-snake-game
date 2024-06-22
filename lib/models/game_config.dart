@@ -7,9 +7,9 @@ class GameConfig {
     required this.gridSize,
   });
 
-  final Offset gridSize;
+  final Size gridSize;
   final int snakeStartLength;
   final double gameSpeed;
 
-  double get aspectRatio => gridSize.dx / gridSize.dy;
+  double get aspectRatio => gridSize.width / gridSize.height;
 }

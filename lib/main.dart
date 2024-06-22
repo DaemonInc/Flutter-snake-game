@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_snake_game/enums/game_overlays.dart';
 import 'package:flutter_snake_game/models/game_config.dart';
-import 'package:flutter_snake_game/widgets/background_grid.dart';
+import 'package:flutter_snake_game/painters/background_grid.dart';
 import 'package:flutter_snake_game/widgets/snake_game.dart';
 
 void main() {
@@ -19,7 +19,7 @@ class MainGame extends StatelessWidget {
   const MainGame({super.key});
 
   final config = const GameConfig(
-    gridSize: Offset(20, 20),
+    gridSize: Size(20, 20),
     snakeStartLength: 3,
     gameSpeed: 1.0,
   );
@@ -42,7 +42,7 @@ class MainGame extends StatelessWidget {
               child: GameWidget.controlled(
                 gameFactory: () => SnakeGame(
                   config: config,
-                  boardSize: Offset(size, size),
+                  boardSize: Size.square(size),
                 ),
                 backgroundBuilder: (context) => SizedBox.expand(
                   child: CustomPaint(
