@@ -19,14 +19,6 @@ class GridBackground extends CustomPainter {
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke;
 
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        size.toRect(),
-        const Radius.circular(6),
-      ),
-      border,
-    );
-
     for (int index = 1; index < gridSize.width; index++) {
       final x = size.width * (index / gridSize.width);
       final p1 = Offset(x, 0);
@@ -42,6 +34,14 @@ class GridBackground extends CustomPainter {
 
       canvas.drawLine(p1, p2, gridLines);
     }
+
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        size.toRect(),
+        const Radius.circular(6),
+      ),
+      border,
+    );
   }
 
   @override
