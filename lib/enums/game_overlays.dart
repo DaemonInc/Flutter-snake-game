@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_snake_game/components/game_over_menu.dart';
-import 'package:flutter_snake_game/components/pause_game_menu.dart';
-import 'package:flutter_snake_game/components/start_game_menu.dart';
+import 'package:flutter_snake_game/widgets/game_over_menu.dart';
+import 'package:flutter_snake_game/widgets/pause_game_menu.dart';
+import 'package:flutter_snake_game/widgets/start_game_menu.dart';
 import 'package:flutter_snake_game/services/game_service.dart';
 
 enum GameOverlays {
