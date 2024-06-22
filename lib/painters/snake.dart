@@ -2,29 +2,36 @@ import 'dart:math';
 
 import 'package:flame/extensions.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_snake_game/enums/direction.dart';
+import 'package:flutter_snake_game/extensions/vector2_extensions.dart';
 
 class Snake extends CustomPainter {
   Snake({
     required this.segments,
-    required this.segmentSize,
+    required this.gridSize,
   }) : assert(segments.length > 1, 'Snake must have at least 2 segments') {
-    _direction = (segments.elementAt(1) - (segments.first));
+    _direction =
+        (segments.elementAt(1) - (segments.first)).asDirection ?? Direction.up;
   }
 
   final Iterable<Vector2> segments;
-  final Size segmentSize;
+  final Vector2 gridSize;
 
-  late Vector2 _direction;
+  late Direction _direction;
 
   /// Moves the snake by one segment in its current direction
-  void move() {
-    _direction = (segments.elementAt(1) - (segments.first));
+  void move([Direction? direction]) {
+    if (direction == null || direction == _direction.inverted) {
+      _direction = ((segments.first) - segments.elementAt(1)).asDirection ??
+          Direction.up;
+    } else {
+      _direction = direction;
+    }
+
     for (int i = segments.length - 1; i > 0; i--) {
       segments.elementAt(i).setFrom(segments.elementAt(i - 1));
     }
-    segments
-        .elementAt(0)
-        .setFrom(segments.elementAt(0) + _direction.inverted());
+    segments.elementAt(0).setFrom(segments.elementAt(0) + _direction.vector);
   }
 
   /// Checks if the snake is out of bounds
@@ -53,11 +60,12 @@ class Snake extends CustomPainter {
     return !_checkOutOfBounds(bounds) && !_checkSelfCollision();
   }
 
-  void reset() {}
-
   @override
   void paint(Canvas canvas, Size size) {
-    assert(segments.length > 1, 'Snake must have at least 2 segments');
+    final segmentSize = Size(
+      size.width / gridSize.x,
+      size.height / gridSize.y,
+    );
     final bodyPaint = Paint()
       ..strokeWidth = min(segmentSize.width, segmentSize.height) * 0.8
       ..style = PaintingStyle.stroke
@@ -72,13 +80,6 @@ class Snake extends CustomPainter {
 
     for (int i = 0; i < segments.length; i++) {
       final segment = segments.elementAt(i);
-
-      if (i != 0 && i < segments.length - 1) {
-        _direction = (segments.elementAt(i + 1) - segments.elementAt(i - 1));
-        _direction *= 1 / _direction.length2;
-      } else if (i == segments.length - 1) {
-        _direction = (segments.elementAt(i) - segments.elementAt(i - 1));
-      }
 
       bodyPath.lineTo(
         (segment.x + 0.5) * segmentSize.width,

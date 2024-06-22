@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 class GridBackground extends CustomPainter {
   GridBackground({required this.gridSize});
 
-  final Size gridSize;
+  final Vector2 gridSize;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -26,16 +26,16 @@ class GridBackground extends CustomPainter {
       border,
     );
 
-    for (int index = 1; index < gridSize.width; index++) {
-      final x = size.width * (index / gridSize.width);
+    for (int index = 1; index < gridSize.x; index++) {
+      final x = size.width * (index / gridSize.x);
       final p1 = Offset(x, 0);
       final p2 = Offset(x, size.height);
 
       canvas.drawLine(p1, p2, gridLines);
     }
 
-    for (int index = 1; index < gridSize.height; index++) {
-      final y = size.height * (index / gridSize.height);
+    for (int index = 1; index < gridSize.y; index++) {
+      final y = size.height * (index / gridSize.y);
       final p1 = Offset(0, y);
       final p2 = Offset(size.width, y);
 

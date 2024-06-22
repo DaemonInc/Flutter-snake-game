@@ -1,97 +1,65 @@
 import 'dart:math';
 
+import 'package:flame/extensions.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_snake_game/enums/game_overlays.dart';
 import 'package:flutter_snake_game/models/game_config.dart';
-import 'package:flutter_snake_game/painters/background_grid.dart';
-import 'package:flutter_snake_game/widgets/snake_game.dart';
+import 'package:flutter_snake_game/services/game_service.dart';
+import 'package:flutter_snake_game/services/input_service.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   Flame.device.setOrientation(DeviceOrientation.portraitUp);
-  runApp(const MainGame());
+  runApp(MainGame());
 }
 
 class MainGame extends StatelessWidget {
-  const MainGame({super.key});
+  MainGame({super.key});
 
-  final config = const GameConfig(
-    gridSize: Size(20, 20),
+  final config = GameConfig(
+    gridSize: Vector2(20, 20),
     snakeStartLength: 3,
-    gameSpeed: 1.0,
+    gameSpeed: 2.0,
   );
+
+  final inputService = InputService();
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
+    return Container(
       decoration: const BoxDecoration(color: Color(0xFFE5E5E5)),
+      padding: const EdgeInsets.all(16.0),
       child: LayoutBuilder(
         builder: (context, constraints) {
           final size = min(constraints.maxWidth, constraints.maxHeight);
-
           return Center(
-            child: Container(
+            child: ConstrainedBox(
               constraints: BoxConstraints(
                 maxWidth: size,
                 maxHeight: size,
               ),
-              // padding: const EdgeInsets.all(8.0),
-              child: GameWidget.controlled(
-                gameFactory: () => SnakeGame(
-                  config: config,
-                  boardSize: Size.square(size),
-                ),
-                backgroundBuilder: (context) => SizedBox.expand(
-                  child: CustomPaint(
-                    painter: GridBackground(gridSize: config.gridSize),
-                  ),
-                ),
-                loadingBuilder: (_) => const Center(
-                  child: CircularProgressIndicator(
-                    color: Colors.greenAccent,
-                  ),
-                ),
-                overlayBuilderMap: {
-                  GameOverlays.pauseMenu.name: (context, game) =>
-                      const MenuWrap(
-                        child: Text('Pause Menu'),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return GameWidget.controlled(
+                    gameFactory: () => GameService(
+                      config: config,
+                      inputService: inputService,
+                    ),
+                    loadingBuilder: (_) => const Center(
+                      child: CircularProgressIndicator(
+                        color: Colors.greenAccent,
                       ),
-                  GameOverlays.gameOverMenu.name: (context, game) =>
-                      const MenuWrap(
-                        child: Text('Game over Menu'),
-                      ),
+                    ),
+                    overlayBuilderMap: GameOverlays.overlayBuilderMap,
+                  );
                 },
               ),
             ),
           );
         },
-      ),
-    );
-  }
-}
-
-class MenuWrap extends StatelessWidget {
-  const MenuWrap({
-    super.key,
-    required this.child,
-  });
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Container(
-        padding: const EdgeInsets.all(16.0),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.75),
-          borderRadius: BorderRadius.circular(16.0),
-        ),
-        child: child,
       ),
     );
   }

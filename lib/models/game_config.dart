@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flame/extensions.dart';
 
 class GameConfig {
   const GameConfig({
@@ -7,10 +7,10 @@ class GameConfig {
     required this.gridSize,
   }) : _gameSpeed = gameSpeed;
 
-  final Size gridSize;
+  final Vector2 gridSize;
   final int snakeStartLength;
   final double _gameSpeed;
 
-  double get aspectRatio => gridSize.width / gridSize.height;
+  double get aspectRatio => gridSize.r;
   double get moveStep => 1 / _gameSpeed;
 }
