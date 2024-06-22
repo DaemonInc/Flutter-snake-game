@@ -18,7 +18,7 @@ class Snake extends CustomPainter {
   }
 
   final Queue<Vector2> segments;
-  final Vector2 gridSize;
+  final Size gridSize;
 
   late Direction _direction;
 
@@ -49,7 +49,10 @@ class Snake extends CustomPainter {
   bool _checkOutOfBounds() {
     final bounds = GameService.instance.config.gridSize;
     final head = segments.first;
-    return head.x < 0 || head.x >= bounds.x || head.y < 0 || head.y >= bounds.y;
+    return head.x < 0 ||
+        head.x >= bounds.width ||
+        head.y < 0 ||
+        head.y >= bounds.height;
   }
 
   /// Checks if the snake has collided with itself
@@ -72,8 +75,8 @@ class Snake extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final segmentSize = Size(
-      size.width / gridSize.x,
-      size.height / gridSize.y,
+      size.width / gridSize.width,
+      size.height / gridSize.height,
     );
     final bodyPaint = Paint()
       ..strokeWidth = min(segmentSize.width, segmentSize.height) * 0.8

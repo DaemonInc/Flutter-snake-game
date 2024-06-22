@@ -12,8 +12,8 @@ class Fruit extends CustomPainter {
       ..style = PaintingStyle.fill;
 
     final segmentSize = Size(
-      size.width / GameService.instance.config.gridSize.x,
-      size.height / GameService.instance.config.gridSize.y,
+      size.width / GameService.instance.config.gridSize.width,
+      size.height / GameService.instance.config.gridSize.height,
     );
 
     canvas.drawCircle(

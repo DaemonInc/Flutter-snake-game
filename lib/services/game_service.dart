@@ -43,6 +43,7 @@ class GameService extends FlameGame with SingleGameInstance, KeyboardEvents {
   Vector2? get fruitPosition => _fruitPosition;
 
   Size _boardSize = Size.zero;
+  Offset _centerOffset = Offset.zero;
   double _timeSinceLastMove = 0;
   bool _gameOver = false;
 
@@ -51,7 +52,14 @@ class GameService extends FlameGame with SingleGameInstance, KeyboardEvents {
 
   @override
   void onGameResize(Vector2 size) {
-    _boardSize = size.toSize();
+    final cellSize =
+        min(size.x / config.gridSize.width, size.y / config.gridSize.height);
+    _boardSize = Size(
+        cellSize * config.gridSize.width, cellSize * config.gridSize.height);
+    _centerOffset = Offset(
+      (size.x - _boardSize.width) / 2,
+      (size.y - _boardSize.height) / 2,
+    );
     super.onGameResize(size);
   }
 
@@ -68,6 +76,7 @@ class GameService extends FlameGame with SingleGameInstance, KeyboardEvents {
 
   @override
   void render(Canvas canvas) {
+    canvas.translate(_centerOffset.dx, _centerOffset.dy);
     _background.paint(canvas, _boardSize);
     _fruit.paint(canvas, _boardSize);
     _snake.paint(canvas, _boardSize);
@@ -154,8 +163,8 @@ class GameService extends FlameGame with SingleGameInstance, KeyboardEvents {
 
   void _initSnake() {
     final start = Vector2(
-      (config.gridSize.x ~/ 2).toDouble(),
-      (config.gridSize.y ~/ 2).toDouble() -
+      (config.gridSize.width ~/ 2).toDouble(),
+      (config.gridSize.height ~/ 2).toDouble() -
           (config.snakeStartLength ~/ 2).toDouble(),
     );
     final segments = Queue.of([
@@ -169,20 +178,20 @@ class GameService extends FlameGame with SingleGameInstance, KeyboardEvents {
   void _spawnFruit() {
     if (_fruitPosition != null) return;
 
-    final totalSize = config.gridSize.x * config.gridSize.y;
-    final remainingSize = totalSize -_snake.segments.length;
+    final totalSize = config.gridSize.width * config.gridSize.height;
+    final remainingSize = totalSize - _snake.segments.length;
 
     if (remainingSize <= 0) {
       gameOver();
       return;
     }
 
-    int cellNr =  _random.nextInt(remainingSize.toInt());
-    Vector2 fruitPosition = cellNr.toVector2(config.gridSize);
+    int cellNr = _random.nextInt(remainingSize.toInt());
+    Vector2 fruitPosition = cellNr.toVector2(config.gridSize.width);
 
     while (_snake.segments.contains(fruitPosition)) {
       cellNr = (cellNr + 1) % totalSize.toInt();
-      fruitPosition = (cellNr).toVector2(config.gridSize);
+      fruitPosition = (cellNr).toVector2(config.gridSize.width);
     }
 
     _fruitPosition = fruitPosition;

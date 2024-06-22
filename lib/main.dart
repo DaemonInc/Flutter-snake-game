@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flame/flame.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
@@ -26,7 +24,6 @@ class MainGame extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final size = min(constraints.maxWidth, constraints.maxHeight);
             final direction = constraints.biggest.aspectRatio > 1
                 ? Axis.horizontal
                 : Axis.vertical;
@@ -34,24 +31,17 @@ class MainGame extends StatelessWidget {
               direction: direction,
               children: [
                 Expanded(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(6),
+                  child: ClipRect(
                     child: Padding(
                       padding: const EdgeInsets.all(8),
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(
-                          maxWidth: size,
-                          maxHeight: size,
-                        ),
-                        child: GameWidget.controlled(
-                          gameFactory: () => GameService.instance,
-                          loadingBuilder: (_) => const Center(
-                            child: CircularProgressIndicator(
-                              color: Colors.greenAccent,
-                            ),
+                      child: GameWidget.controlled(
+                        gameFactory: () => GameService.instance,
+                        loadingBuilder: (_) => const Center(
+                          child: CircularProgressIndicator(
+                            color: Colors.greenAccent,
                           ),
-                          overlayBuilderMap: GameOverlays.overlayBuilderMap,
                         ),
+                        overlayBuilderMap: GameOverlays.overlayBuilderMap,
                       ),
                     ),
                   ),

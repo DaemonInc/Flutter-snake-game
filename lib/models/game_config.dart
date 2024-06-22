@@ -8,25 +8,25 @@ class GameConfig {
   }) : _gameSpeed = gameSpeed;
 
   factory GameConfig.easy() {
-    return GameConfig(
+    return const GameConfig(
       snakeStartLength: 3,
       gameSpeed: 2,
-      gridSize: Vector2(5, 5),
+      gridSize: Size(7, 5),
     );
   }
 
   factory GameConfig.normal() {
-    return GameConfig(
+    return const GameConfig(
       snakeStartLength: 5,
       gameSpeed: 3,
-      gridSize: Vector2(15, 15),
+      gridSize: Size(15, 15),
     );
   }
 
-  final Vector2 gridSize;
+  final Size gridSize;
   final int snakeStartLength;
   final double _gameSpeed;
 
-  double get aspectRatio => gridSize.r;
+  double get aspectRatio => gridSize.aspectRatio;
   double get moveStep => 1 / _gameSpeed;
 }
