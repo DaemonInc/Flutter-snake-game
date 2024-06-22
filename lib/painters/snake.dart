@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:math';
 
 import 'package:flame/extensions.dart';
@@ -16,13 +17,13 @@ class Snake extends CustomPainter {
         (segments.elementAt(1) - (segments.first)).asDirection ?? Direction.up;
   }
 
-  final Iterable<Vector2> segments;
+  final Queue<Vector2> segments;
   final Vector2 gridSize;
 
   late Direction _direction;
 
   /// Moves the snake by one segment in its current direction
-  void move() {
+  bool move(Vector2? fruitPosition) {
     final direction = InputService.instance.currentDirection;
 
     if (direction == null || direction == _direction.inverted) {
@@ -35,7 +36,13 @@ class Snake extends CustomPainter {
     for (int i = segments.length - 1; i > 0; i--) {
       segments.elementAt(i).setFrom(segments.elementAt(i - 1));
     }
-    segments.elementAt(0).setFrom(segments.elementAt(0) + _direction.vector);
+    segments.first.setFrom(segments.first + _direction.vector);
+
+    if ((segments.first) == fruitPosition) {
+      segments.addLast(segments.last.clone());
+      return true;
+    }
+    return false;
   }
 
   /// Checks if the snake is out of bounds
