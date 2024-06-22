@@ -8,9 +8,11 @@ import 'package:flutter_snake_game/extensions/vector2_extensions.dart';
 import 'package:flutter_snake_game/services/game_service.dart';
 
 class InputService {
+  InputService._();
+
   static InputService? _instance;
   static InputService get instance {
-    _instance ??= InputService();
+    _instance ??= InputService._();
     return _instance!;
   }
 

@@ -15,6 +15,7 @@ import 'package:flutter_snake_game/painters/background_grid.dart';
 import 'package:flutter_snake_game/painters/fruit.dart';
 import 'package:flutter_snake_game/painters/snake.dart';
 import 'package:flutter_snake_game/services/input_service.dart';
+import 'package:flutter_snake_game/services/score_service.dart';
 
 class GameService extends FlameGame with SingleGameInstance, KeyboardEvents {
   GameService._();
@@ -84,6 +85,7 @@ class GameService extends FlameGame with SingleGameInstance, KeyboardEvents {
 
     final didEat = _snake.move(_fruitPosition);
     if (didEat) {
+      ScoreService.instance.increment();
       _fruitPosition = null;
       _spawnFruit();
     }
@@ -138,6 +140,7 @@ class GameService extends FlameGame with SingleGameInstance, KeyboardEvents {
 
   void _reset() {
     InputService.instance.reset();
+    ScoreService.instance.reset();
     _gameOver = false;
     _timeSinceLastMove = 0;
     _fruitPosition = null;

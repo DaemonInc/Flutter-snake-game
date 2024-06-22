@@ -9,16 +9,21 @@ environment:
   sdk: ">=3.4.3 <4.0.0"
 
 dependencies:
-  flame: ^1.18.0
-  flame_lint: ^1.2.0
   flutter:
     sdk: flutter
+
+  flame: ^1.18.0
+  shared_preferences: ^2.2.3
+  json_annotation: ^4.9.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
+  json_serializable: ^6.8.0
   flutter_lints: ^3.0.0
+  flame_lint: ^1.2.0
+  build_runner: ^2.4.11
 
 flutter:
   uses-material-design: true
