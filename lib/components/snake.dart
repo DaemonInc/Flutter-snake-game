@@ -116,6 +116,10 @@ class Snake extends CustomPainter {
       size.width / gridSize.width,
       size.height / gridSize.height,
     );
+    _bodyPaint.strokeWidth =
+        min(_segmentSize.width, _segmentSize.height) * _bodyWidth;
+    _deadEyesPaint.strokeWidth =
+        min(_segmentSize.width, _segmentSize.height) * 0.04;
     paint(canvas, size);
   }
 
