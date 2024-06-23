@@ -38,11 +38,7 @@ class InputService {
   }
 
   void handleDragInput(Vector2 velocity) {
-    final direction = velocity.asDirection;
-
-    if (direction != null) {
-      _currentDirection = direction;
-    }
+    _currentDirection = velocity.asDirection;
   }
 
   void handleInput(Inputs input) {

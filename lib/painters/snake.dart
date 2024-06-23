@@ -13,8 +13,8 @@ class Snake extends CustomPainter {
     required this.segments,
     required this.gridSize,
   }) : assert(segments.length > 1, 'Snake must have at least 2 segments') {
-    _direction =
-        (segments.elementAt(1) - (segments.first)).asDirection ?? Direction.up;
+    _direction = (segments.first - segments.elementAt(1)).asDirection;
+    _previousTailPosition = segments.last.clone() - _direction.vector2;
   }
 
   final Queue<Vector2> segments;
@@ -24,13 +24,28 @@ class Snake extends CustomPainter {
 
   final List<Vector2> _fruit = [];
 
+  double _stepPercentage = 0;
+  Size _segmentSize = Size.zero;
+  late Vector2 _previousTailPosition;
+
+  final _bodyWidth = 0.7;
+
+  late final _bodyPaint = Paint()
+    ..strokeWidth = min(_segmentSize.width, _segmentSize.height) * _bodyWidth
+    ..style = PaintingStyle.stroke
+    ..strokeCap = StrokeCap.round
+    ..color = Colors.green;
+  final _eyesPaint = Paint()
+    ..style = PaintingStyle.fill
+    ..color = Colors.red;
+
   /// Moves the snake by one segment in its current direction
   bool move(Vector2? fruitPosition) {
+    _previousTailPosition = segments.last.clone();
     final direction = InputService.instance.currentDirection;
 
     if (direction == null || direction == _direction.inverted) {
-      _direction = ((segments.first) - segments.elementAt(1)).asDirection ??
-          Direction.up;
+      _direction = (segments.first - segments.elementAt(1)).asDirection;
     } else {
       _direction = direction;
     }
@@ -38,17 +53,19 @@ class Snake extends CustomPainter {
     for (int i = segments.length - 1; i > 0; i--) {
       segments.elementAt(i).setFrom(segments.elementAt(i - 1));
     }
-    segments.first.setFrom(segments.first + _direction.vector);
+    segments.first.setFrom(segments.first + _direction.vector2);
+
+    bool didEat = false;
 
     if (fruitPosition != null && segments.first == fruitPosition) {
       _fruit.add(fruitPosition);
       segments.addLast(segments.last.clone());
-      return true;
+      didEat = true;
     }
 
     _fruit.removeWhere((fruit) => !segments.contains(fruit));
 
-    return false;
+    return didEat;
   }
 
   /// Checks if the snake is out of bounds
@@ -78,171 +95,195 @@ class Snake extends CustomPainter {
     return !_checkOutOfBounds() && !_checkSelfCollision();
   }
 
-  @override
-  void paint(Canvas canvas, Size size) {
-    final segmentSize = Size(
+  void render(Canvas canvas, Size size, double stepPercentage) {
+    _stepPercentage = stepPercentage;
+    _segmentSize = Size(
       size.width / gridSize.width,
       size.height / gridSize.height,
     );
-    _drawBody(canvas, segmentSize);
-    _drawFruit(canvas, segmentSize);
-    _drawEyes(canvas, segmentSize);
+    paint(canvas, size);
   }
 
-  void _drawBody(Canvas canvas, Size segmentSize) {
-    final bodyPaint = Paint()
-      ..strokeWidth = min(segmentSize.width, segmentSize.height) * 0.7
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..color = Colors.green;
+  @override
+  @protected
+  void paint(Canvas canvas, Size size) {
+    _drawBody(canvas);
+    _drawFruit(canvas);
+    _drawEyes(canvas);
+  }
 
-    Path bodyPath = Path()
-      ..moveTo(
-        (segments.first.x + 0.5) * segmentSize.width,
-        (segments.first.y + 0.5) * segmentSize.height,
-      );
+  void _drawBody(Canvas canvas) {
+    final start = _getOffset(segments.first);
+    Path bodyPath = Path()..moveTo(start.dx, start.dy);
 
     bool shouldBend = false;
 
     for (int i = 0; i < segments.length; i++) {
       final segment = segments.elementAt(i);
-      if (i < segments.length - 2) {
-        final nextSegment = segments.elementAt(i + 1);
-        final segmentPlusTwo = segments.elementAt(i + 2);
-        final nextShouldBend =
-            segment.x != segmentPlusTwo.x && segment.y != segmentPlusTwo.y;
-        final inBetween = (segment + nextSegment) / 2;
+      final segmentType = i == 0
+          ? SegmentType.head
+          : i == segments.length - 1
+              ? SegmentType.tail
+              : SegmentType.body;
 
-        if (nextShouldBend && !shouldBend) {
-          bodyPath.lineTo(
-            (inBetween.x + 0.5) * segmentSize.width,
-            (inBetween.y + 0.5) * segmentSize.height,
-          );
-        } else if (shouldBend) {
-          final previousSegment = segments.elementAt(i - 1);
-          _drawBend(
-            bodyPath,
-            previousSegment,
-            segment,
-            nextSegment,
-            segmentSize,
-          );
-        } else {
-          bodyPath.lineTo(
-            (segment.x + 0.5) * segmentSize.width,
-            (segment.y + 0.5) * segmentSize.height,
-          );
-        }
-        shouldBend = nextShouldBend;
-      } else if (i < segments.length - 1) {
-        if (shouldBend) {
-          final nextSegment = segments.elementAt(i + 1);
-          final previousSegment = segments.elementAt(i - 1);
-          _drawBend(
-            bodyPath,
-            previousSegment,
-            segment,
-            nextSegment,
-            segmentSize,
-          );
-        } else {
-          bodyPath.lineTo(
-            (segment.x + 0.5) * segmentSize.width,
-            (segment.y + 0.5) * segmentSize.height,
-          );
-        }
-        shouldBend = false;
+      bool nextShouldBend = false;
+
+      if (i == segments.length - 1) {
+        final direction = (segments.elementAt(i - 1) - segment).asDirection;
+        _drawStraight(
+          segment,
+          direction,
+          segmentType,
+          bodyPath,
+        );
+        break;
+      }
+
+      final nextSegment = segments.elementAt(i + 1);
+      final direction = (segment - nextSegment).asDirection;
+
+      if (i < segments.length - 2) {
+        final segmentPlusTwo = segments.elementAt(i + 2);
+        nextShouldBend =
+            segment.x != segmentPlusTwo.x && segment.y != segmentPlusTwo.y;
+      }
+
+      if (shouldBend) {
+        final previousSegment = segments.elementAt(i - 1);
+        _drawBend(
+          bodyPath,
+          canvas,
+          previousSegment,
+          segment,
+          nextSegment,
+        );
       } else {
-        bodyPath.lineTo(
-          (segment.x + 0.5) * segmentSize.width,
-          (segment.y + 0.5) * segmentSize.height,
+        _drawStraight(
+          segment,
+          direction,
+          segmentType,
+          bodyPath,
         );
       }
+
+      shouldBend = nextShouldBend;
     }
 
-    canvas.drawPath(bodyPath, bodyPaint);
+    canvas.drawPath(bodyPath, _bodyPaint);
+  }
+
+  void _drawStraight(
+    Vector2 segment,
+    Direction direction,
+    SegmentType segmentType,
+    Path bodyPath,
+  ) {
+    Vector2 end = segment;
+
+    switch (segmentType) {
+      case SegmentType.head:
+        end = segment - direction.vector2;
+        final start = end.clone();
+        start.lerp(segment, _stepPercentage);
+        final startOffset = _getOffset(start);
+        bodyPath.moveTo(
+          startOffset.dx,
+          startOffset.dy,
+        );
+        break;
+      case SegmentType.body:
+        if (segment == segments.last) return;
+        end = segment - direction.vector2;
+        break;
+      case SegmentType.tail:
+        final tailStart = _getOffset(segment);
+        bodyPath.lineTo(
+          tailStart.dx,
+          tailStart.dy,
+        );
+        if (segment == _previousTailPosition) {
+          return;
+        } else {
+          direction = (_previousTailPosition - segment).asDirection;
+        }
+
+        bodyPath.moveTo(tailStart.dx, tailStart.dy);
+        end = segment + direction.vector2;
+        end.lerp(segment, _stepPercentage);
+        break;
+    }
+
+    final endOffset = _getOffset(end);
+
+    bodyPath.lineTo(
+      endOffset.dx,
+      endOffset.dy,
+    );
   }
 
   void _drawBend(
     Path bodyPath,
+    Canvas canvas,
     Vector2 previousSegment,
     Vector2 currentSegment,
     Vector2 nextSegment,
-    Size segmentSize,
   ) {
-    final currentPosition = (previousSegment + currentSegment) / 2;
-    currentPosition.lerp(currentSegment, 0.2);
-
-    bodyPath.lineTo(
-      (currentPosition.x + 0.5) * segmentSize.width,
-      (currentPosition.y + 0.5) * segmentSize.height,
-    );
-
-    final endPosition = (nextSegment + currentSegment) / 2;
-    endPosition.lerp(currentSegment, 0.2);
-
-    final endOffset = Offset(
-      (endPosition.x + 0.5) * segmentSize.width,
-      (endPosition.y + 0.5) * segmentSize.height,
-    );
-
-    final clockwise = previousSegment.y < currentSegment.y &&
-            nextSegment.x < currentSegment.x ||
-        previousSegment.x > currentSegment.x &&
-            nextSegment.y < currentSegment.y ||
-        previousSegment.y > currentSegment.y &&
-            nextSegment.x > currentSegment.x ||
-        previousSegment.x < currentSegment.x &&
-            nextSegment.y > currentSegment.y;
-
-    bodyPath.arcToPoint(
-      endOffset,
-      radius: Radius.circular(segmentSize.width * 0.4),
-      largeArc: false,
-      clockwise: clockwise,
-    );
+    final center = _getOffset(currentSegment);
+    bodyPath.lineTo(center.dx, center.dy);
+    bodyPath.moveTo(center.dx, center.dy);
   }
 
-  void _drawFruit(Canvas canvas, Size segmentSize) {
+  void _drawFruit(Canvas canvas) {
     final fruitPaint = Paint()
       ..style = PaintingStyle.fill
       ..color = Colors.redAccent;
 
     for (final fruit in _fruit) {
-      if (segments.first == fruit || segments.last == fruit) continue;
+      if (segments.first == fruit) continue;
       canvas.drawCircle(
         Offset(
-          (fruit.x + 0.5) * segmentSize.width,
-          (fruit.y + 0.5) * segmentSize.height,
+          (fruit.x + 0.5) * _segmentSize.width,
+          (fruit.y + 0.5) * _segmentSize.height,
         ),
-        min(segmentSize.width, segmentSize.height) * 0.25,
+        min(_segmentSize.width, _segmentSize.height) * 0.25,
         fruitPaint,
       );
     }
   }
 
-  void _drawEyes(Canvas canvas, Size segmentSize) {
-    final eyes = Paint()
-      ..style = PaintingStyle.fill
-      ..color = Colors.red;
+  void _drawEyes(Canvas canvas) {
     final horizontal =
         _direction == Direction.left || _direction == Direction.right;
 
+    final position = segments.first - _direction.vector2;
+    position.lerp(segments.first, _stepPercentage);
+
     canvas.drawCircle(
       Offset(
-        (segments.first.x + (horizontal ? 0.5 : 0.35)) * segmentSize.width,
-        (segments.first.y + (!horizontal ? 0.5 : 0.35)) * segmentSize.height,
+        (position.x + (horizontal ? 0.5 : 0.5 + _bodyWidth * 0.2)) *
+            _segmentSize.width,
+        (position.y + (!horizontal ? 0.5 : 0.5 + _bodyWidth * 0.2)) *
+            _segmentSize.height,
       ),
-      min(segmentSize.width, segmentSize.height) * 0.15 / 2,
-      eyes,
+      min(_segmentSize.width, _segmentSize.height) * 0.15 / 2,
+      _eyesPaint,
     );
     canvas.drawCircle(
       Offset(
-        (segments.first.x + (horizontal ? 0.5 : 0.65)) * segmentSize.width,
-        (segments.first.y + (!horizontal ? 0.5 : 0.65)) * segmentSize.height,
+        (position.x + (horizontal ? 0.5 : 0.5 - _bodyWidth * 0.2)) *
+            _segmentSize.width,
+        (position.y + (!horizontal ? 0.5 : 0.5 - _bodyWidth * 0.2)) *
+            _segmentSize.height,
       ),
-      min(segmentSize.width, segmentSize.height) * 0.15 / 2,
-      eyes,
+      min(_segmentSize.width, _segmentSize.height) * 0.15 / 2,
+      _eyesPaint,
+    );
+  }
+
+  Offset _getOffset(Vector2 position) {
+    return Offset(
+      (position.x + 0.5) * _segmentSize.width,
+      (position.y + 0.5) * _segmentSize.height,
     );
   }
 
@@ -251,3 +292,5 @@ class Snake extends CustomPainter {
     return true;
   }
 }
+
+enum SegmentType { head, body, tail }

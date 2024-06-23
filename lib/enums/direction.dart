@@ -7,7 +7,7 @@ enum Direction {
   right,
   ;
 
-  Vector2 get vector {
+  Vector2 get vector2 {
     switch (this) {
       case Direction.up:
         return Vector2(0, -1);

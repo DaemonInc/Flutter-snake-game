@@ -21,7 +21,7 @@ class Fruit extends CustomPainter {
         (fruitPosition.x + 0.5) * segmentSize.width,
         (fruitPosition.y + 0.5) * segmentSize.height,
       ),
-      segmentSize.shortestSide * 0.4,
+      segmentSize.shortestSide * 0.3,
       paint,
     );
   }

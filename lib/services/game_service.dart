@@ -67,7 +67,11 @@ class GameService extends FlameGame
     canvas.translate(centerOffset.dx, centerOffset.dy);
     _background.paint(canvas, boardSize);
     _fruit.paint(canvas, boardSize);
-    _snake.paint(canvas, boardSize);
+    _snake.render(
+      canvas,
+      boardSize,
+      _timeSinceLastMove / config.moveStep,
+    );
     super.render(canvas);
   }
 
