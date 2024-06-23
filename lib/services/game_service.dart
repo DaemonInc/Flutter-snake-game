@@ -17,15 +17,19 @@ import 'package:flutter_snake_game/painters/background_grid.dart';
 import 'package:flutter_snake_game/painters/fruit.dart';
 import 'package:flutter_snake_game/painters/snake.dart';
 import 'package:flutter_snake_game/services/input_service.dart';
+import 'package:flutter_snake_game/services/lifecycle_service.dart';
 import 'package:flutter_snake_game/services/score_service.dart';
 
 /// The main game service
 class GameService extends FlameGame
     with SingleGameInstance, KeyboardEvents, BoardSize {
-  GameService._();
+  GameService._() {
+    _lifecycleService = LifecycleService(pauseGame: pauseGame);
+  }
 
   final _inputService = InputService.instance;
   final _scoreService = ScoreService.instance;
+  late final LifecycleService _lifecycleService;
 
   static GameService? _instance;
   static GameService get instance {
@@ -166,8 +170,10 @@ class GameService extends FlameGame
     pauseEngine();
     _gameOverAudio?.stop();
     if (isDead) {
-      _gameOverAudio = await FlameAudio.play('game_over.mp3', volume: 0.3);
+      _gameOverAudio =
+          await FlameAudio.playLongAudio('game_over.mp3', volume: 0.3);
     }
+    overlays.clear();
     overlays.add(GameOverlays.gameOverMenu.name);
   }
 
@@ -190,7 +196,7 @@ class GameService extends FlameGame
     _timeSinceLastMove = 0;
     _fruitPosition = null;
 
-    overlays.removeAll(GameOverlays.values.map((e) => e.name).toList());
+    overlays.clear();
     _initGameElements();
   }
 
@@ -247,5 +253,12 @@ class GameService extends FlameGame
     }
 
     _fruitPosition = fruitPosition;
+  }
+
+  @override
+  void onDispose() {
+    _lifecycleService.dispose();
+    FlameAudio.audioCache.clearAll();
+    super.onDispose();
   }
 }
