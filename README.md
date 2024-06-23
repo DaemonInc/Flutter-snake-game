@@ -11,6 +11,7 @@ Classic snake game made with Flutter using the [flame package](https://docs.flam
 
 ```bash
 git clone https://github.com/NYJvMuijlwijk/Flutter-snake-game.git
+cd Flutter-snake-game
 ```
 
 - Install dependencies

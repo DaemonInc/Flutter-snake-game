@@ -20,6 +20,7 @@ class MainGame extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       home: Container(
         decoration: const BoxDecoration(color: Color(0xFFE5E5E5)),
         padding: const EdgeInsets.all(16.0),
