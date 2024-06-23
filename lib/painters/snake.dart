@@ -22,6 +22,8 @@ class Snake extends CustomPainter {
 
   late Direction _direction;
 
+  final List<Vector2> _fruit = [];
+
   /// Moves the snake by one segment in its current direction
   bool move(Vector2? fruitPosition) {
     final direction = InputService.instance.currentDirection;
@@ -38,10 +40,14 @@ class Snake extends CustomPainter {
     }
     segments.first.setFrom(segments.first + _direction.vector);
 
-    if ((segments.first) == fruitPosition) {
+    if (fruitPosition != null && segments.first == fruitPosition) {
+      _fruit.add(fruitPosition);
       segments.addLast(segments.last.clone());
       return true;
     }
+
+    _fruit.removeWhere((fruit) => !segments.contains(fruit));
+
     return false;
   }
 
@@ -78,6 +84,12 @@ class Snake extends CustomPainter {
       size.width / gridSize.width,
       size.height / gridSize.height,
     );
+    _drawBody(canvas, segmentSize);
+    _drawFruit(canvas, segmentSize);
+    _drawEyes(canvas, segmentSize);
+  }
+
+  void _drawBody(Canvas canvas, Size segmentSize) {
     final bodyPaint = Paint()
       ..strokeWidth = min(segmentSize.width, segmentSize.height) * 0.7
       ..style = PaintingStyle.stroke
@@ -107,12 +119,13 @@ class Snake extends CustomPainter {
             (inBetween.y + 0.5) * segmentSize.height,
           );
         } else if (shouldBend) {
-          bodyPath.conicTo(
-            (segment.x + 0.5) * segmentSize.width,
-            (segment.y + 0.5) * segmentSize.height,
-            (inBetween.x + 0.5) * segmentSize.width,
-            (inBetween.y + 0.5) * segmentSize.height,
-            10,
+          final previousSegment = segments.elementAt(i - 1);
+          _drawBend(
+            bodyPath,
+            previousSegment,
+            segment,
+            nextSegment,
+            segmentSize,
           );
         } else {
           bodyPath.lineTo(
@@ -122,15 +135,15 @@ class Snake extends CustomPainter {
         }
         shouldBend = nextShouldBend;
       } else if (i < segments.length - 1) {
-        final nextSegment = segments.elementAt(i + 1);
-        final inBetween = (segment + nextSegment) / 2;
         if (shouldBend) {
-          bodyPath.conicTo(
-            (segment.x + 0.5) * segmentSize.width,
-            (segment.y + 0.5) * segmentSize.height,
-            (inBetween.x + 0.5) * segmentSize.width,
-            (inBetween.y + 0.5) * segmentSize.height,
-            10,
+          final nextSegment = segments.elementAt(i + 1);
+          final previousSegment = segments.elementAt(i - 1);
+          _drawBend(
+            bodyPath,
+            previousSegment,
+            segment,
+            nextSegment,
+            segmentSize,
           );
         } else {
           bodyPath.lineTo(
@@ -148,6 +161,89 @@ class Snake extends CustomPainter {
     }
 
     canvas.drawPath(bodyPath, bodyPaint);
+  }
+
+  void _drawBend(
+    Path bodyPath,
+    Vector2 previousSegment,
+    Vector2 currentSegment,
+    Vector2 nextSegment,
+    Size segmentSize,
+  ) {
+    final currentPosition = (previousSegment + currentSegment) / 2;
+    currentPosition.lerp(currentSegment, 0.2);
+
+    bodyPath.lineTo(
+      (currentPosition.x + 0.5) * segmentSize.width,
+      (currentPosition.y + 0.5) * segmentSize.height,
+    );
+
+    final endPosition = (nextSegment + currentSegment) / 2;
+    endPosition.lerp(currentSegment, 0.2);
+
+    final endOffset = Offset(
+      (endPosition.x + 0.5) * segmentSize.width,
+      (endPosition.y + 0.5) * segmentSize.height,
+    );
+
+    final clockwise = previousSegment.y < currentSegment.y &&
+            nextSegment.x < currentSegment.x ||
+        previousSegment.x > currentSegment.x &&
+            nextSegment.y < currentSegment.y ||
+        previousSegment.y > currentSegment.y &&
+            nextSegment.x > currentSegment.x ||
+        previousSegment.x < currentSegment.x &&
+            nextSegment.y > currentSegment.y;
+
+    bodyPath.arcToPoint(
+      endOffset,
+      radius: Radius.circular(segmentSize.width * 0.4),
+      largeArc: false,
+      clockwise: clockwise,
+    );
+  }
+
+  void _drawFruit(Canvas canvas, Size segmentSize) {
+    final fruitPaint = Paint()
+      ..style = PaintingStyle.fill
+      ..color = Colors.redAccent;
+
+    for (final fruit in _fruit) {
+      if (segments.first == fruit || segments.last == fruit) continue;
+      canvas.drawCircle(
+        Offset(
+          (fruit.x + 0.5) * segmentSize.width,
+          (fruit.y + 0.5) * segmentSize.height,
+        ),
+        min(segmentSize.width, segmentSize.height) * 0.25,
+        fruitPaint,
+      );
+    }
+  }
+
+  void _drawEyes(Canvas canvas, Size segmentSize) {
+    final eyes = Paint()
+      ..style = PaintingStyle.fill
+      ..color = Colors.red;
+    final horizontal =
+        _direction == Direction.left || _direction == Direction.right;
+
+    canvas.drawCircle(
+      Offset(
+        (segments.first.x + (horizontal ? 0.5 : 0.35)) * segmentSize.width,
+        (segments.first.y + (!horizontal ? 0.5 : 0.35)) * segmentSize.height,
+      ),
+      min(segmentSize.width, segmentSize.height) * 0.15 / 2,
+      eyes,
+    );
+    canvas.drawCircle(
+      Offset(
+        (segments.first.x + (horizontal ? 0.5 : 0.65)) * segmentSize.width,
+        (segments.first.y + (!horizontal ? 0.5 : 0.65)) * segmentSize.height,
+      ),
+      min(segmentSize.width, segmentSize.height) * 0.15 / 2,
+      eyes,
+    );
   }
 
   @override
