@@ -6,21 +6,17 @@ import 'package:gap/gap.dart';
 class GameUi extends StatelessWidget {
   const GameUi({
     super.key,
-    required this.direction,
   });
-
-  final Axis direction;
 
   @override
   Widget build(BuildContext context) {
     return ConstrainedBox(
-      constraints: BoxConstraints(
-        minWidth: direction == Axis.vertical ? 200 : 0,
-        minHeight: direction == Axis.horizontal ? 100 : 0,
+      constraints: const BoxConstraints(
+        minWidth: 200,
+        minHeight: 100,
       ),
-      child: Flex(
-        direction: direction,
-        crossAxisAlignment: CrossAxisAlignment.center,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.max,
         children: [
           ValueListenableBuilder(
@@ -30,7 +26,10 @@ class GameUi extends StatelessWidget {
               style: Theme.of(context).textTheme.headlineMedium,
             ),
           ),
-          const Gap(16),
+          const Gap(
+            16,
+            crossAxisExtent: 16,
+          ),
           ElevatedButton(
             onPressed: GameService.instance.pauseGame,
             child: const Text('Pause'),

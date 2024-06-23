@@ -47,10 +47,9 @@ class MainGame extends StatelessWidget {
                   ),
                 ),
                 const Gap(16),
-                GameUi(
-                  direction: direction == Axis.vertical
-                      ? Axis.horizontal
-                      : Axis.vertical,
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: GameUi(),
                 )
               ],
             );
