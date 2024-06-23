@@ -2,6 +2,7 @@ import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flutter_snake_game/services/input_service.dart';
 
+/// Handles drag input and sends it to the [InputService]
 class DragInputDetector extends PositionComponent with DragCallbacks {
   DragInputDetector() : super(anchor: Anchor.center);
 

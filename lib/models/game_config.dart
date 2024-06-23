@@ -23,10 +23,14 @@ class GameConfig {
     );
   }
 
+  /// The size of the game grid
   final Size gridSize;
+  /// The starting length of the snake
   final int snakeStartLength;
   final double _gameSpeed;
 
+  /// The aspect ratio of the game grid
   double get aspectRatio => gridSize.aspectRatio;
+  /// Time in seconds between each move
   double get moveStep => 1 / _gameSpeed;
 }

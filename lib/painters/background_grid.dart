@@ -2,6 +2,7 @@ import 'package:flame/extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_snake_game/services/game_service.dart';
 
+/// Paints a grid background
 class GridBackground extends CustomPainter {
   GridBackground();
 

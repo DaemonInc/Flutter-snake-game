@@ -19,6 +19,7 @@ import 'package:flutter_snake_game/painters/snake.dart';
 import 'package:flutter_snake_game/services/input_service.dart';
 import 'package:flutter_snake_game/services/score_service.dart';
 
+/// The main game service
 class GameService extends FlameGame
     with SingleGameInstance, KeyboardEvents, BoardSize {
   GameService._();
@@ -69,6 +70,18 @@ class GameService extends FlameGame
   }
 
   @override
+  KeyEventResult onKeyEvent(
+    KeyEvent event,
+    Set<LogicalKeyboardKey> keysPressed,
+  ) {
+    final result = InputService.instance.handleKeyInput(event, keysPressed);
+    if (result != null) {
+      return result;
+    }
+    return super.onKeyEvent(event, keysPressed);
+  }
+
+  @override
   void render(Canvas canvas) {
     canvas.translate(centerOffset.dx, centerOffset.dy);
     _background.paint(canvas, boardSize);
@@ -87,16 +100,15 @@ class GameService extends FlameGame
     if (_timeSinceLastMove < config.moveStep) {
       return;
     }
-
     _timeSinceLastMove = _timeSinceLastMove % config.moveStep;
 
-    final didEat = _snake.move(_fruitPosition);
-    if (didEat) {
-      ScoreService.instance.increment();
-      FlameAudio.play('eat.mp3', volume: 0.2);
-      _fruitPosition = null;
-      _spawnFruit();
-    }
+    _moveSnake();
+    _checkGameOver();
+
+    super.update(dt);
+  }
+
+  void _checkGameOver() {
     if (!_snake.checkAlive()) {
       Future.delayed(Duration(
         milliseconds: (0.5 * config.moveStep * 1000).toInt(),
@@ -105,20 +117,16 @@ class GameService extends FlameGame
         gameOver();
       });
     }
-
-    super.update(dt);
   }
 
-  @override
-  KeyEventResult onKeyEvent(
-    KeyEvent event,
-    Set<LogicalKeyboardKey> keysPressed,
-  ) {
-    final result = InputService.instance.handleKeyInput(event, keysPressed);
-    if (result != null) {
-      return result;
+  void _moveSnake() {
+    final didEat = _snake.move(_fruitPosition);
+    if (didEat) {
+      ScoreService.instance.increment();
+      FlameAudio.play('eat.mp3', volume: 0.2);
+      _fruitPosition = null;
+      _spawnFruit();
     }
-    return super.onKeyEvent(event, keysPressed);
   }
 
   void pauseGame() {
@@ -142,29 +150,35 @@ class GameService extends FlameGame
   }
 
   AudioPlayer? _gameOverAudio;
+
+  /// Ends the game
   Future<void> gameOver() async {
     _isGameOver = true;
     pauseEngine();
     _gameOverAudio?.stop();
-    _gameOverAudio = await FlameAudio.play('game_over.mp3', volume: 0.3);
+    if (isDead) {
+      _gameOverAudio = await FlameAudio.play('game_over.mp3', volume: 0.3);
+    }
     overlays.add(GameOverlays.gameOverMenu.name);
   }
 
   void startGame([GameConfig? config]) {
-    _gameOverAudio?.stop();
     if (config != null) _config = config;
     _reset();
     resumeEngine();
-    overlays.removeAll(GameOverlays.values.map((e) => e.name).toList());
   }
 
   void _reset() {
     InputService.instance.reset();
     ScoreService.instance.reset();
+
+    _gameOverAudio?.stop();
     _isDead = false;
     _isGameOver = false;
     _timeSinceLastMove = 0;
     _fruitPosition = null;
+    
+    overlays.removeAll(GameOverlays.values.map((e) => e.name).toList());
     _initGameElements();
   }
 

@@ -7,6 +7,7 @@ import 'package:flutter_snake_game/enums/inputs.dart';
 import 'package:flutter_snake_game/extensions/vector2_extensions.dart';
 import 'package:flutter_snake_game/services/game_service.dart';
 
+/// Handles user input for the game
 class InputService {
   InputService._();
 
@@ -17,12 +18,15 @@ class InputService {
   }
 
   Direction? _currentDirection;
+  /// The last direction input received
   Direction? get currentDirection => _currentDirection;
 
+  /// Resets the service to its initial state
   void reset() {
     _currentDirection = null;
   }
 
+  /// Handles keyboard input, returning whether the event was handled
   KeyEventResult? handleKeyInput(
     KeyEvent event,
     Set<LogicalKeyboardKey> keysPressed,
@@ -37,10 +41,12 @@ class InputService {
     return KeyEventResult.handled;
   }
 
+  /// Handles directional drag input
   void handleDragInput(Vector2 velocity) {
     _currentDirection = velocity.asDirection;
   }
 
+  /// Handles a given game input
   void handleInput(Inputs input) {
     switch (input) {
       case Inputs.up:

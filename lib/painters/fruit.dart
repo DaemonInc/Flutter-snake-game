@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_snake_game/services/game_service.dart';
 
+/// Paints a fruit
 class Fruit extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {

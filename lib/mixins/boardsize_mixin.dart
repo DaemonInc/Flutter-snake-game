@@ -6,9 +6,11 @@ import 'package:flutter_snake_game/models/game_config.dart';
 
 mixin BoardSize on Component {
   late Size _boardSize;
+  /// The size of the board
   Size get boardSize => _boardSize;
 
   Offset _centerOffset = Offset.zero;
+  /// The offset to center the board on the screen
   Offset get centerOffset => _centerOffset;
 
   GameConfig get config;

@@ -8,6 +8,7 @@ import 'package:flutter_snake_game/extensions/vector2_extensions.dart';
 import 'package:flutter_snake_game/services/game_service.dart';
 import 'package:flutter_snake_game/services/input_service.dart';
 
+/// A snake that can move around the screen
 class Snake extends CustomPainter {
   Snake({
     required this.segments,
@@ -35,7 +36,7 @@ class Snake extends CustomPainter {
     ..style = PaintingStyle.stroke
     ..strokeCap = StrokeCap.round
     ..color = Colors.green;
-   final _eyesPaint = Paint()
+  final _eyesPaint = Paint()
     ..style = PaintingStyle.fill
     ..color = Colors.red;
   late final _deadEyesPaint = Paint()
@@ -84,7 +85,6 @@ class Snake extends CustomPainter {
   }
 
   /// Checks if the snake has collided with itself
-  /// (i.e. if the head is in the same position as any other segment)
   bool _checkSelfCollision() {
     final head = segments.first;
     for (int i = 1; i < segments.length; i++) {
@@ -100,6 +100,14 @@ class Snake extends CustomPainter {
     return !_checkOutOfBounds() && !_checkSelfCollision();
   }
 
+  /// Paints the snake to the canvas
+  ///
+  /// The [canvas] is the canvas to paint on
+  ///
+  /// The [size] is the size of the game board
+  ///
+  /// The [stepPercentage] is a value between 0 and 1 that represents the
+  /// percentage of time passed until the next move
   void render(Canvas canvas, Size size, double stepPercentage) {
     _stepPercentage = stepPercentage;
     _segmentSize = Size(
@@ -126,10 +134,10 @@ class Snake extends CustomPainter {
     for (int i = 0; i < segments.length; i++) {
       final segment = segments.elementAt(i);
       final segmentType = i == 0
-          ? SegmentType.head
+          ? _SegmentType.head
           : i == segments.length - 1
-              ? SegmentType.tail
-              : SegmentType.body;
+              ? _SegmentType.tail
+              : _SegmentType.body;
 
       bool nextShouldBend = false;
 
@@ -154,13 +162,9 @@ class Snake extends CustomPainter {
       }
 
       if (shouldBend) {
-        final previousSegment = segments.elementAt(i - 1);
         _drawBend(
           bodyPath,
-          canvas,
-          previousSegment,
           segment,
-          nextSegment,
         );
       } else {
         _drawStraight(
@@ -180,13 +184,13 @@ class Snake extends CustomPainter {
   void _drawStraight(
     Vector2 segment,
     Direction direction,
-    SegmentType segmentType,
+    _SegmentType segmentType,
     Path bodyPath,
   ) {
     Vector2 end = segment;
 
     switch (segmentType) {
-      case SegmentType.head:
+      case _SegmentType.head:
         end = segment - direction.vector2;
         final start = end.clone();
         start.lerp(segment, _stepPercentage);
@@ -196,11 +200,11 @@ class Snake extends CustomPainter {
           startOffset.dy,
         );
         break;
-      case SegmentType.body:
+      case _SegmentType.body:
         if (segment == segments.last) return;
         end = segment - direction.vector2;
         break;
-      case SegmentType.tail:
+      case _SegmentType.tail:
         final tailStart = _getOffset(segment);
         bodyPath.lineTo(
           tailStart.dx,
@@ -228,10 +232,7 @@ class Snake extends CustomPainter {
 
   void _drawBend(
     Path bodyPath,
-    Canvas canvas,
-    Vector2 previousSegment,
     Vector2 currentSegment,
-    Vector2 nextSegment,
   ) {
     final center = _getOffset(currentSegment);
     bodyPath.lineTo(center.dx, center.dy);
@@ -345,4 +346,4 @@ class Snake extends CustomPainter {
   }
 }
 
-enum SegmentType { head, body, tail }
+enum _SegmentType { head, body, tail }
