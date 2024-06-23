@@ -31,7 +31,7 @@ class GameService extends FlameGame
   GameConfig? _config;
   @override
   GameConfig get config {
-    _config ??= GameConfig.easy();
+    _config ??= GameConfig.small();
     return _config!;
   }
 
@@ -90,7 +90,11 @@ class GameService extends FlameGame
       _fruitPosition = null;
       _spawnFruit();
     }
-    if (!_snake.checkAlive()) gameOver();
+    if (!_snake.checkAlive()) {
+      Future.delayed(Duration(
+        milliseconds: (0.5 * config.moveStep * 1000).toInt(),
+      )).then((_) => gameOver());
+    }
 
     super.update(dt);
   }

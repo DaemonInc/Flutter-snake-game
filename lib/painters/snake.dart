@@ -236,7 +236,7 @@ class Snake extends CustomPainter {
   void _drawFruit(Canvas canvas) {
     final fruitPaint = Paint()
       ..style = PaintingStyle.fill
-      ..color = Colors.redAccent;
+      ..color = Colors.red.withOpacity(0.7);
 
     for (final fruit in _fruit) {
       if (segments.first == fruit) continue;

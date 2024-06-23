@@ -7,7 +7,7 @@ class GameConfig {
     required this.gridSize,
   }) : _gameSpeed = gameSpeed;
 
-  factory GameConfig.easy() {
+  factory GameConfig.small() {
     return const GameConfig(
       snakeStartLength: 3,
       gameSpeed: 2,
