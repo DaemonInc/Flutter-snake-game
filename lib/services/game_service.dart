@@ -24,7 +24,7 @@ import 'package:flutter_snake_game/services/score_service.dart';
 class GameService extends FlameGame
     with SingleGameInstance, KeyboardEvents, BoardSize {
   GameService._() {
-    _lifecycleService = LifecycleService(pauseGame: pauseGame);
+    _lifecycleService = LifecycleService(onFocusLost: pauseGame);
   }
 
   final _inputService = InputService.instance;
@@ -49,13 +49,10 @@ class GameService extends FlameGame
     gridSize: config.gridSize,
     getFruitPosition: () => fruitPosition,
   );
-
   late Snake _snake;
 
   Vector2? _fruitPosition;
   Vector2? get fruitPosition => _fruitPosition;
-
-  double _timeSinceLastMove = 0;
 
   bool _isGameOver = false;
 
@@ -79,6 +76,7 @@ class GameService extends FlameGame
     return super.onLoad();
   }
 
+  /// Handle keyboard events
   @override
   KeyEventResult onKeyEvent(
     KeyEvent event,
@@ -104,6 +102,8 @@ class GameService extends FlameGame
     super.render(canvas);
   }
 
+  double _timeSinceLastMove = 0;
+
   @override
   void update(double dt) {
     _timeSinceLastMove += dt;
@@ -119,14 +119,14 @@ class GameService extends FlameGame
   }
 
   void _checkGameOver() {
-    if (!_snake.checkAlive()) {
-      Future.delayed(Duration(
-        milliseconds: (0.5 * config.moveStep * 1000).toInt(),
-      )).then((_) {
-        _isDead = true;
-        gameOver();
-      });
-    }
+    if (_snake.checkAlive()) return;
+
+    Future.delayed(Duration(
+      milliseconds: (0.5 * config.moveStep * 1000).toInt(),
+    )).then((_) {
+      _isDead = true;
+      gameOver();
+    });
   }
 
   void _moveSnake() {
@@ -134,26 +134,29 @@ class GameService extends FlameGame
       _fruitPosition,
       _inputService.currentDirection,
     );
-    if (didEat) {
-      _scoreService.increment();
-      FlameAudio.play('eat.mp3', volume: 0.2);
-      _fruitPosition = null;
-      _spawnFruit();
-    }
+    if (!didEat) return;
+
+    _scoreService.increment();
+    FlameAudio.play('eat.mp3', volume: 0.2);
+    _fruitPosition = null;
+    _spawnFruit();
   }
 
+  /// Pause the game and show the pause menu
   void pauseGame() {
     if (paused || _isGameOver) return;
     pauseEngine();
     overlays.add(GameOverlays.pauseMenu.name);
   }
 
+  /// Resume the game
   void resumeGame() {
     if (!paused || _isGameOver) return;
     resumeEngine();
-    overlays.removeAll(GameOverlays.values.map((e) => e.name).toList());
+    overlays.clear();
   }
 
+  /// Toggle the game pause state
   void togglePause() {
     if (paused) {
       resumeGame();
@@ -164,7 +167,7 @@ class GameService extends FlameGame
 
   AudioPlayer? _gameOverAudio;
 
-  /// Ends the game
+  /// Ends the game and shows the game over menu
   Future<void> gameOver() async {
     _isGameOver = true;
     pauseEngine();
@@ -177,6 +180,7 @@ class GameService extends FlameGame
     overlays.add(GameOverlays.gameOverMenu.name);
   }
 
+  /// Start a new game with the given [config] or the current config if none is provided
   void startGame([GameConfig? config]) {
     if (config != null) {
       _config = config;
@@ -186,6 +190,7 @@ class GameService extends FlameGame
     resumeEngine();
   }
 
+  /// Reset the game state
   void _reset() {
     _inputService.reset();
     _scoreService.reset();
