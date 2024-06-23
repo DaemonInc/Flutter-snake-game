@@ -24,6 +24,9 @@ class GameService extends FlameGame
     with SingleGameInstance, KeyboardEvents, BoardSize {
   GameService._();
 
+  final _inputService = InputService.instance;
+  final _scoreService = ScoreService.instance;
+
   static GameService? _instance;
   static GameService get instance {
     _instance ??= GameService._();
@@ -37,10 +40,11 @@ class GameService extends FlameGame
     return _config!;
   }
 
-  final _random = Random();
-
-  final GridBackground _background = GridBackground();
-  final Fruit _fruit = Fruit();
+  late GridBackground _background = GridBackground(gridSize: config.gridSize);
+  late Fruit _fruit = Fruit(
+    gridSize: config.gridSize,
+    getFruitPosition: () => fruitPosition,
+  );
 
   late Snake _snake;
 
@@ -54,13 +58,15 @@ class GameService extends FlameGame
   bool _isDead = false;
   bool get isDead => _isDead;
 
+  int get score => _scoreService.score.value;
+
   @override
   Color backgroundColor() => const Color(0x00000000);
 
   @override
   FutureOr<void> onLoad() async {
     await FlameAudio.audioCache.loadAll(['game_over.mp3', 'eat.mp3']);
-    add(DragInputDetector());
+    add(DragInputDetector(onDragEnd: _inputService.handleDragInput));
     pauseEngine();
     overlays.add(GameOverlays.startGameMenu.name);
 
@@ -74,7 +80,7 @@ class GameService extends FlameGame
     KeyEvent event,
     Set<LogicalKeyboardKey> keysPressed,
   ) {
-    final result = InputService.instance.handleKeyInput(event, keysPressed);
+    final result = _inputService.handleKeyInput(event, keysPressed);
     if (result != null) {
       return result;
     }
@@ -120,9 +126,12 @@ class GameService extends FlameGame
   }
 
   void _moveSnake() {
-    final didEat = _snake.move(_fruitPosition);
+    final didEat = _snake.move(
+      _fruitPosition,
+      _inputService.currentDirection,
+    );
     if (didEat) {
-      ScoreService.instance.increment();
+      _scoreService.increment();
       FlameAudio.play('eat.mp3', volume: 0.2);
       _fruitPosition = null;
       _spawnFruit();
@@ -163,28 +172,31 @@ class GameService extends FlameGame
   }
 
   void startGame([GameConfig? config]) {
-    if (config != null) _config = config;
+    if (config != null) {
+      _config = config;
+      _background = GridBackground(gridSize: config.gridSize);
+    }
     _reset();
     resumeEngine();
   }
 
   void _reset() {
-    InputService.instance.reset();
-    ScoreService.instance.reset();
+    _inputService.reset();
+    _scoreService.reset();
 
     _gameOverAudio?.stop();
     _isDead = false;
     _isGameOver = false;
     _timeSinceLastMove = 0;
     _fruitPosition = null;
-    
+
     overlays.removeAll(GameOverlays.values.map((e) => e.name).toList());
     _initGameElements();
   }
 
   void _initGameElements() {
     _initSnake();
-    _spawnFruit();
+    _initFruit();
   }
 
   void _initSnake() {
@@ -198,9 +210,23 @@ class GameService extends FlameGame
         start + Vector2(0, i.toDouble()),
     ]);
 
-    _snake = Snake(segments: segments, gridSize: config.gridSize);
+    _snake = Snake(
+      segments: segments,
+      gridSize: config.gridSize,
+      isDead: () => isDead,
+    );
   }
 
+  void _initFruit() {
+    _fruitPosition = null;
+    _fruit = Fruit(
+      gridSize: config.gridSize,
+      getFruitPosition: () => fruitPosition,
+    );
+    _spawnFruit();
+  }
+
+  final _random = Random();
   void _spawnFruit() {
     if (_fruitPosition != null) return;
 

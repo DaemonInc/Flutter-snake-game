@@ -11,6 +11,8 @@ import 'package:flutter_snake_game/services/game_service.dart';
 class InputService {
   InputService._();
 
+  late final _gameService = GameService.instance;
+
   static InputService? _instance;
   static InputService get instance {
     _instance ??= InputService._();
@@ -62,7 +64,7 @@ class InputService {
         _currentDirection = Direction.right;
         break;
       case Inputs.pause:
-        GameService.instance.togglePause();
+        _gameService.togglePause();
         break;
     }
   }

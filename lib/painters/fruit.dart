@@ -1,11 +1,19 @@
+import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_snake_game/services/game_service.dart';
 
 /// Paints a fruit
 class Fruit extends CustomPainter {
+  Fruit({
+    required this.gridSize,
+    required this.getFruitPosition,
+  });
+
+  final Size gridSize;
+  final Vector2? Function() getFruitPosition;
+
   @override
   void paint(Canvas canvas, Size size) {
-    final fruitPosition = GameService.instance.fruitPosition;
+    final fruitPosition = getFruitPosition();
     if (fruitPosition == null) return;
 
     final paint = Paint()
@@ -13,8 +21,8 @@ class Fruit extends CustomPainter {
       ..style = PaintingStyle.fill;
 
     final segmentSize = Size(
-      size.width / GameService.instance.config.gridSize.width,
-      size.height / GameService.instance.config.gridSize.height,
+      size.width / gridSize.width,
+      size.height / gridSize.height,
     );
 
     canvas.drawCircle(

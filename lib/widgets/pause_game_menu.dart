@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_snake_game/widgets/overlay_menu.dart';
-import 'package:flutter_snake_game/services/game_service.dart';
 
 class PauseGameMenu extends StatelessWidget {
-  const PauseGameMenu({super.key});
+  const PauseGameMenu({
+    super.key,
+    required void Function() onResume,
+    required void Function() onRestart,
+  })  : _restart = onRestart,
+        _resume = onResume;
+
+  final void Function() _restart;
+  final void Function() _resume;
 
   @override
   Widget build(BuildContext context) {
@@ -12,13 +19,12 @@ class PauseGameMenu extends StatelessWidget {
         title: 'Pause Menu',
         content: [
           ElevatedButton(
-            onPressed: () =>
-                GameService.instance.startGame(GameService.instance.config),
+            onPressed: _restart,
             child: const Text('Restart Game'),
           ),
           const SizedBox(height: 20),
           ElevatedButton(
-            onPressed: () => GameService.instance.resumeGame(),
+            onPressed: _resume,
             child: const Text('Resume Game'),
           ),
         ],

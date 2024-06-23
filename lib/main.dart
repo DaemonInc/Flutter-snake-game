@@ -4,17 +4,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_snake_game/enums/game_overlays.dart';
 import 'package:flutter_snake_game/services/game_service.dart';
+import 'package:flutter_snake_game/services/score_service.dart';
 import 'package:flutter_snake_game/widgets/game_ui.dart';
 import 'package:gap/gap.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   Flame.device.setOrientation(DeviceOrientation.portraitUp);
-  runApp(const MainGame());
+  runApp(MainGame());
 }
 
 class MainGame extends StatelessWidget {
-  const MainGame({super.key});
+  MainGame({super.key});
+
+  final _gameService = GameService.instance;
+  final _scoreService = ScoreService.instance;
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +39,7 @@ class MainGame extends StatelessWidget {
                     child: Padding(
                       padding: const EdgeInsets.all(8),
                       child: GameWidget.controlled(
-                        gameFactory: () => GameService.instance,
+                        gameFactory: () => _gameService,
                         loadingBuilder: (_) => const Center(
                           child: CircularProgressIndicator(
                             color: Colors.greenAccent,
@@ -47,9 +51,12 @@ class MainGame extends StatelessWidget {
                   ),
                 ),
                 const Gap(16),
-                const Align(
+                Align(
                   alignment: Alignment.centerLeft,
-                  child: GameUi(),
+                  child: GameUi(
+                    pauseGame: _gameService.pauseGame,
+                    score: _scoreService.score,
+                  ),
                 )
               ],
             );

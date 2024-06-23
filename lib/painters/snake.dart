@@ -5,14 +5,13 @@ import 'package:flame/extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_snake_game/enums/direction.dart';
 import 'package:flutter_snake_game/extensions/vector2_extensions.dart';
-import 'package:flutter_snake_game/services/game_service.dart';
-import 'package:flutter_snake_game/services/input_service.dart';
 
 /// A snake that can move around the screen
 class Snake extends CustomPainter {
   Snake({
     required this.segments,
     required this.gridSize,
+    required this.isDead,
   }) : assert(segments.length > 1, 'Snake must have at least 2 segments') {
     _direction = (segments.first - segments.elementAt(1)).asDirection;
     _previousTailPosition = segments.last.clone() - _direction.vector2;
@@ -20,16 +19,17 @@ class Snake extends CustomPainter {
 
   final Queue<Vector2> segments;
   final Size gridSize;
+  final bool Function() isDead;
 
   late Direction _direction;
+  late Vector2 _previousTailPosition;
 
-  final List<Vector2> _fruit = [];
+  final List<Vector2> _eatenFruit = [];
 
   double _stepPercentage = 0;
   Size _segmentSize = Size.zero;
-  late Vector2 _previousTailPosition;
 
-  final _bodyWidth = 0.7;
+  final double _bodyWidth = 0.7;
 
   late final _bodyPaint = Paint()
     ..strokeWidth = min(_segmentSize.width, _segmentSize.height) * _bodyWidth
@@ -46,9 +46,12 @@ class Snake extends CustomPainter {
     ..color = Colors.red;
 
   /// Moves the snake by one segment in its current direction
-  bool move(Vector2? fruitPosition) {
+  ///
+  /// [fruitPosition] is the position of the fruit
+  ///
+  /// Returns true if the snake ate the fruit
+  bool move(Vector2? fruitPosition, Direction? direction) {
     _previousTailPosition = segments.last.clone();
-    final direction = InputService.instance.currentDirection;
 
     if (direction == null || direction == _direction.inverted) {
       _direction = (segments.first - segments.elementAt(1)).asDirection;
@@ -64,24 +67,23 @@ class Snake extends CustomPainter {
     bool didEat = false;
 
     if (fruitPosition != null && segments.first == fruitPosition) {
-      _fruit.add(fruitPosition);
+      _eatenFruit.add(fruitPosition);
       segments.addLast(segments.last.clone());
       didEat = true;
     }
 
-    _fruit.removeWhere((fruit) => !segments.contains(fruit));
+    _eatenFruit.removeWhere((fruit) => !segments.contains(fruit));
 
     return didEat;
   }
 
   /// Checks if the snake is out of bounds
   bool _checkOutOfBounds() {
-    final bounds = GameService.instance.config.gridSize;
     final head = segments.first;
     return head.x < 0 ||
-        head.x >= bounds.width ||
+        head.x >= gridSize.width ||
         head.y < 0 ||
-        head.y >= bounds.height;
+        head.y >= gridSize.height;
   }
 
   /// Checks if the snake has collided with itself
@@ -181,6 +183,15 @@ class Snake extends CustomPainter {
     canvas.drawPath(bodyPath, _bodyPaint);
   }
 
+  /// Draws a straight segment of the snake
+  ///
+  /// [segment] is the position of the segment
+  ///
+  /// [direction] is the direction of the segment
+  ///
+  /// [segmentType] is the type of segment
+  ///
+  /// [bodyPath] is the path to draw on
   void _drawStraight(
     Vector2 segment,
     Direction direction,
@@ -230,11 +241,16 @@ class Snake extends CustomPainter {
     );
   }
 
+  /// Draws a bend in the snake
+  ///
+  /// [bodyPath] is the path to draw on
+  ///
+  /// [segment] is the position of the segment
   void _drawBend(
     Path bodyPath,
-    Vector2 currentSegment,
+    Vector2 segment,
   ) {
-    final center = _getOffset(currentSegment);
+    final center = _getOffset(segment);
     bodyPath.lineTo(center.dx, center.dy);
     bodyPath.moveTo(center.dx, center.dy);
   }
@@ -244,7 +260,7 @@ class Snake extends CustomPainter {
       ..style = PaintingStyle.fill
       ..color = Colors.red.withOpacity(0.7);
 
-    for (final fruit in _fruit) {
+    for (final fruit in _eatenFruit) {
       if (segments.first == fruit) continue;
       canvas.drawCircle(
         Offset(
@@ -264,8 +280,6 @@ class Snake extends CustomPainter {
     final position = segments.first - _direction.vector2;
     position.lerp(segments.first, _stepPercentage);
 
-    final isDead = GameService.instance.isDead;
-
     final leftEye = _getOffset(position) +
         Offset(
           (horizontal ? 0 : _bodyWidth * 0.2) * _segmentSize.width,
@@ -277,7 +291,7 @@ class Snake extends CustomPainter {
           (!horizontal ? 0 : _bodyWidth * -0.2) * _segmentSize.height,
         );
 
-    if (isDead) {
+    if (isDead()) {
       final eyeSize = min(_segmentSize.width, _segmentSize.height) * 0.06;
       final eyePath = Path();
 
@@ -333,6 +347,7 @@ class Snake extends CustomPainter {
     }
   }
 
+  /// Gets the drawing offset of a position
   Offset _getOffset(Vector2 position) {
     return Offset(
       (position.x + 0.5) * _segmentSize.width,

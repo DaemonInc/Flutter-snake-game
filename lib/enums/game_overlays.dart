@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_snake_game/models/game_config.dart';
 import 'package:flutter_snake_game/widgets/game_over_menu.dart';
 import 'package:flutter_snake_game/widgets/pause_game_menu.dart';
 import 'package:flutter_snake_game/widgets/start_game_menu.dart';
@@ -12,11 +13,16 @@ enum GameOverlays {
 
   static Map<String, Widget Function(BuildContext, GameService)>
       get overlayBuilderMap => {
-            GameOverlays.startGameMenu.name: (context, game) =>
-                const StartGameMenu(),
-            GameOverlays.pauseMenu.name: (context, game) =>
-                const PauseGameMenu(),
-            GameOverlays.gameOverMenu.name: (context, game) =>
-                const GameOverMenu(),
+            GameOverlays.startGameMenu.name: (context, game) => StartGameMenu(
+                  startGame: () => game.startGame(GameConfig.small()),
+                ),
+            GameOverlays.pauseMenu.name: (context, game) => PauseGameMenu(
+                  onResume: game.resumeGame,
+                  onRestart: game.startGame,
+                ),
+            GameOverlays.gameOverMenu.name: (context, game) => GameOverMenu(
+                  score: game.score,
+                  restart: game.startGame,
+                ),
           };
 }

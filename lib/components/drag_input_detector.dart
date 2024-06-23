@@ -4,7 +4,12 @@ import 'package:flutter_snake_game/services/input_service.dart';
 
 /// Handles drag input and sends it to the [InputService]
 class DragInputDetector extends PositionComponent with DragCallbacks {
-  DragInputDetector() : super(anchor: Anchor.center);
+  DragInputDetector({
+    required void Function(Vector2 velocity) onDragEnd,
+  })  : _onDragEnd = onDragEnd,
+        super(anchor: Anchor.center);
+
+  final void Function(Vector2 velocity) _onDragEnd;
 
   @override
   void onGameResize(Vector2 size) {
@@ -15,7 +20,7 @@ class DragInputDetector extends PositionComponent with DragCallbacks {
 
   @override
   void onDragEnd(DragEndEvent event) {
-    InputService.instance.handleDragInput(event.velocity);
+    _onDragEnd(event.velocity);
     super.onDragEnd(event);
   }
 }

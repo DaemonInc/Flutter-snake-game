@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_snake_game/widgets/overlay_menu.dart';
-import 'package:flutter_snake_game/models/game_config.dart';
-import 'package:flutter_snake_game/services/game_service.dart';
 
 class StartGameMenu extends StatelessWidget {
-  const StartGameMenu({super.key});
+  const StartGameMenu({
+    super.key,
+    required void Function() startGame,
+  }) : _startGame = startGame;
+
+  final void Function() _startGame;
 
   @override
   Widget build(BuildContext context) {
@@ -13,9 +16,7 @@ class StartGameMenu extends StatelessWidget {
         title: 'Start Game Menu',
         content: [
           ElevatedButton(
-            onPressed: () {
-              GameService.instance.startGame(GameConfig.small());
-            },
+            onPressed: _startGame,
             child: const Text('Start Game'),
           ),
         ],

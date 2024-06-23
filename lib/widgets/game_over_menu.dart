@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_snake_game/services/score_service.dart';
 import 'package:flutter_snake_game/widgets/overlay_menu.dart';
-import 'package:flutter_snake_game/services/game_service.dart';
 import 'package:gap/gap.dart';
 
 class GameOverMenu extends StatelessWidget {
-  const GameOverMenu({super.key});
+  const GameOverMenu({
+    super.key,
+    required int score,
+    required void Function() restart,
+  })  : _score = score,
+        _restart = restart;
+
+  final int _score;
+  final void Function() _restart;
 
   @override
   Widget build(BuildContext context) {
@@ -13,11 +19,10 @@ class GameOverMenu extends StatelessWidget {
       child: OverlayMenu(
         title: 'Game Over',
         content: [
-          Text('Score: ${ScoreService.instance.score.value}'),
+          Text('Score: $_score'),
           const Gap(16),
           ElevatedButton(
-            onPressed: () =>
-                GameService.instance.startGame(GameService.instance.config),
+            onPressed: _restart,
             child: const Text(
               'Restart Game',
               textAlign: TextAlign.center,
