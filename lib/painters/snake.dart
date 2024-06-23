@@ -79,9 +79,9 @@ class Snake extends CustomPainter {
       size.height / gridSize.height,
     );
     final bodyPaint = Paint()
-      ..strokeWidth = min(segmentSize.width, segmentSize.height) * 0.8
+      ..strokeWidth = min(segmentSize.width, segmentSize.height) * 0.7
       ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.square
+      ..strokeCap = StrokeCap.round
       ..color = Colors.green;
 
     Path bodyPath = Path()
@@ -90,13 +90,61 @@ class Snake extends CustomPainter {
         (segments.first.y + 0.5) * segmentSize.height,
       );
 
+    bool shouldBend = false;
+
     for (int i = 0; i < segments.length; i++) {
       final segment = segments.elementAt(i);
+      if (i < segments.length - 2) {
+        final nextSegment = segments.elementAt(i + 1);
+        final segmentPlusTwo = segments.elementAt(i + 2);
+        final nextShouldBend =
+            segment.x != segmentPlusTwo.x && segment.y != segmentPlusTwo.y;
+        final inBetween = (segment + nextSegment) / 2;
 
-      bodyPath.lineTo(
-        (segment.x + 0.5) * segmentSize.width,
-        (segment.y + 0.5) * segmentSize.height,
-      );
+        if (nextShouldBend && !shouldBend) {
+          bodyPath.lineTo(
+            (inBetween.x + 0.5) * segmentSize.width,
+            (inBetween.y + 0.5) * segmentSize.height,
+          );
+        } else if (shouldBend) {
+          bodyPath.conicTo(
+            (segment.x + 0.5) * segmentSize.width,
+            (segment.y + 0.5) * segmentSize.height,
+            (inBetween.x + 0.5) * segmentSize.width,
+            (inBetween.y + 0.5) * segmentSize.height,
+            10,
+          );
+        } else {
+          bodyPath.lineTo(
+            (segment.x + 0.5) * segmentSize.width,
+            (segment.y + 0.5) * segmentSize.height,
+          );
+        }
+        shouldBend = nextShouldBend;
+      } else if (i < segments.length - 1) {
+        final nextSegment = segments.elementAt(i + 1);
+        final inBetween = (segment + nextSegment) / 2;
+        if (shouldBend) {
+          bodyPath.conicTo(
+            (segment.x + 0.5) * segmentSize.width,
+            (segment.y + 0.5) * segmentSize.height,
+            (inBetween.x + 0.5) * segmentSize.width,
+            (inBetween.y + 0.5) * segmentSize.height,
+            10,
+          );
+        } else {
+          bodyPath.lineTo(
+            (segment.x + 0.5) * segmentSize.width,
+            (segment.y + 0.5) * segmentSize.height,
+          );
+        }
+        shouldBend = false;
+      } else {
+        bodyPath.lineTo(
+          (segment.x + 0.5) * segmentSize.width,
+          (segment.y + 0.5) * segmentSize.height,
+        );
+      }
     }
 
     canvas.drawPath(bodyPath, bodyPaint);

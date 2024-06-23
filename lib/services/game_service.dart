@@ -10,6 +10,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_snake_game/components/drag_input_detector.dart';
 import 'package:flutter_snake_game/enums/game_overlays.dart';
 import 'package:flutter_snake_game/extensions/int_extensions.dart';
+import 'package:flutter_snake_game/mixins/boardsize_mixin.dart';
 import 'package:flutter_snake_game/models/game_config.dart';
 import 'package:flutter_snake_game/painters/background_grid.dart';
 import 'package:flutter_snake_game/painters/fruit.dart';
@@ -17,7 +18,8 @@ import 'package:flutter_snake_game/painters/snake.dart';
 import 'package:flutter_snake_game/services/input_service.dart';
 import 'package:flutter_snake_game/services/score_service.dart';
 
-class GameService extends FlameGame with SingleGameInstance, KeyboardEvents {
+class GameService extends FlameGame
+    with SingleGameInstance, KeyboardEvents, BoardSize {
   GameService._();
 
   static GameService? _instance;
@@ -27,6 +29,7 @@ class GameService extends FlameGame with SingleGameInstance, KeyboardEvents {
   }
 
   GameConfig? _config;
+  @override
   GameConfig get config {
     _config ??= GameConfig.easy();
     return _config!;
@@ -42,26 +45,11 @@ class GameService extends FlameGame with SingleGameInstance, KeyboardEvents {
   Vector2? _fruitPosition;
   Vector2? get fruitPosition => _fruitPosition;
 
-  Size _boardSize = Size.zero;
-  Offset _centerOffset = Offset.zero;
   double _timeSinceLastMove = 0;
   bool _gameOver = false;
 
   @override
   Color backgroundColor() => const Color(0x00000000);
-
-  @override
-  void onGameResize(Vector2 size) {
-    final cellSize =
-        min(size.x / config.gridSize.width, size.y / config.gridSize.height);
-    _boardSize = Size(
-        cellSize * config.gridSize.width, cellSize * config.gridSize.height);
-    _centerOffset = Offset(
-      (size.x - _boardSize.width) / 2,
-      (size.y - _boardSize.height) / 2,
-    );
-    super.onGameResize(size);
-  }
 
   @override
   FutureOr<void> onLoad() {
@@ -76,10 +64,10 @@ class GameService extends FlameGame with SingleGameInstance, KeyboardEvents {
 
   @override
   void render(Canvas canvas) {
-    canvas.translate(_centerOffset.dx, _centerOffset.dy);
-    _background.paint(canvas, _boardSize);
-    _fruit.paint(canvas, _boardSize);
-    _snake.paint(canvas, _boardSize);
+    canvas.translate(centerOffset.dx, centerOffset.dy);
+    _background.paint(canvas, boardSize);
+    _fruit.paint(canvas, boardSize);
+    _snake.paint(canvas, boardSize);
     super.render(canvas);
   }
 
@@ -141,7 +129,8 @@ class GameService extends FlameGame with SingleGameInstance, KeyboardEvents {
     overlays.add(GameOverlays.gameOverMenu.name);
   }
 
-  void startGame(GameConfig config) {
+  void startGame([GameConfig? config]) {
+    if (config != null) _config = config;
     _reset();
     resumeEngine();
     overlays.removeAll(GameOverlays.values.map((e) => e.name).toList());

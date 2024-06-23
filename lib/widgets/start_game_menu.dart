@@ -14,7 +14,7 @@ class StartGameMenu extends StatelessWidget {
         content: [
           ElevatedButton(
             onPressed: () {
-              GameService.instance.startGame(GameConfig.normal());
+              GameService.instance.startGame(GameConfig.easy());
             },
             child: const Text('Start Game'),
           ),
