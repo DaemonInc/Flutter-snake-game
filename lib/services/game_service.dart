@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:flame/events.dart';
 import 'package:flame/extensions.dart';
 import 'package:flame/game.dart';
+import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_snake_game/components/drag_input_detector.dart';
@@ -46,13 +47,18 @@ class GameService extends FlameGame
   Vector2? get fruitPosition => _fruitPosition;
 
   double _timeSinceLastMove = 0;
-  bool _gameOver = false;
+
+  bool _isGameOver = false;
+
+  bool _isDead = false;
+  bool get isDead => _isDead;
 
   @override
   Color backgroundColor() => const Color(0x00000000);
 
   @override
-  FutureOr<void> onLoad() {
+  FutureOr<void> onLoad() async {
+    await FlameAudio.audioCache.loadAll(['game_over.mp3', 'eat.mp3']);
     add(DragInputDetector());
     pauseEngine();
     overlays.add(GameOverlays.startGameMenu.name);
@@ -87,13 +93,17 @@ class GameService extends FlameGame
     final didEat = _snake.move(_fruitPosition);
     if (didEat) {
       ScoreService.instance.increment();
+      FlameAudio.play('eat.mp3', volume: 0.2);
       _fruitPosition = null;
       _spawnFruit();
     }
     if (!_snake.checkAlive()) {
       Future.delayed(Duration(
         milliseconds: (0.5 * config.moveStep * 1000).toInt(),
-      )).then((_) => gameOver());
+      )).then((_) {
+        _isDead = true;
+        gameOver();
+      });
     }
 
     super.update(dt);
@@ -112,13 +122,13 @@ class GameService extends FlameGame
   }
 
   void pauseGame() {
-    if (paused || _gameOver) return;
+    if (paused || _isGameOver) return;
     pauseEngine();
     overlays.add(GameOverlays.pauseMenu.name);
   }
 
   void resumeGame() {
-    if (!paused || _gameOver) return;
+    if (!paused || _isGameOver) return;
     resumeEngine();
     overlays.removeAll(GameOverlays.values.map((e) => e.name).toList());
   }
@@ -131,13 +141,17 @@ class GameService extends FlameGame
     }
   }
 
-  void gameOver() {
-    _gameOver = true;
+  AudioPlayer? _gameOverAudio;
+  Future<void> gameOver() async {
+    _isGameOver = true;
     pauseEngine();
+    _gameOverAudio?.stop();
+    _gameOverAudio = await FlameAudio.play('game_over.mp3', volume: 0.3);
     overlays.add(GameOverlays.gameOverMenu.name);
   }
 
   void startGame([GameConfig? config]) {
+    _gameOverAudio?.stop();
     if (config != null) _config = config;
     _reset();
     resumeEngine();
@@ -147,7 +161,8 @@ class GameService extends FlameGame
   void _reset() {
     InputService.instance.reset();
     ScoreService.instance.reset();
-    _gameOver = false;
+    _isDead = false;
+    _isGameOver = false;
     _timeSinceLastMove = 0;
     _fruitPosition = null;
     _initGameElements();

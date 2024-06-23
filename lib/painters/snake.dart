@@ -35,8 +35,13 @@ class Snake extends CustomPainter {
     ..style = PaintingStyle.stroke
     ..strokeCap = StrokeCap.round
     ..color = Colors.green;
-  final _eyesPaint = Paint()
+   final _eyesPaint = Paint()
     ..style = PaintingStyle.fill
+    ..color = Colors.red;
+  late final _deadEyesPaint = Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeCap = StrokeCap.round
+    ..strokeWidth = min(_segmentSize.width, _segmentSize.height) * 0.04
     ..color = Colors.red;
 
   /// Moves the snake by one segment in its current direction
@@ -258,26 +263,73 @@ class Snake extends CustomPainter {
     final position = segments.first - _direction.vector2;
     position.lerp(segments.first, _stepPercentage);
 
-    canvas.drawCircle(
-      Offset(
-        (position.x + (horizontal ? 0.5 : 0.5 + _bodyWidth * 0.2)) *
-            _segmentSize.width,
-        (position.y + (!horizontal ? 0.5 : 0.5 + _bodyWidth * 0.2)) *
-            _segmentSize.height,
-      ),
-      min(_segmentSize.width, _segmentSize.height) * 0.15 / 2,
-      _eyesPaint,
-    );
-    canvas.drawCircle(
-      Offset(
-        (position.x + (horizontal ? 0.5 : 0.5 - _bodyWidth * 0.2)) *
-            _segmentSize.width,
-        (position.y + (!horizontal ? 0.5 : 0.5 - _bodyWidth * 0.2)) *
-            _segmentSize.height,
-      ),
-      min(_segmentSize.width, _segmentSize.height) * 0.15 / 2,
-      _eyesPaint,
-    );
+    final isDead = GameService.instance.isDead;
+
+    final leftEye = _getOffset(position) +
+        Offset(
+          (horizontal ? 0 : _bodyWidth * 0.2) * _segmentSize.width,
+          (!horizontal ? 0 : _bodyWidth * 0.2) * _segmentSize.height,
+        );
+    final rightEye = _getOffset(position) +
+        Offset(
+          (horizontal ? 0 : _bodyWidth * -0.2) * _segmentSize.width,
+          (!horizontal ? 0 : _bodyWidth * -0.2) * _segmentSize.height,
+        );
+
+    if (isDead) {
+      final eyeSize = min(_segmentSize.width, _segmentSize.height) * 0.06;
+      final eyePath = Path();
+
+      eyePath
+        ..moveTo(
+          leftEye.dx + eyeSize,
+          leftEye.dy + eyeSize,
+        )
+        ..lineTo(
+          leftEye.dx - eyeSize,
+          leftEye.dy - eyeSize,
+        )
+        ..moveTo(
+          leftEye.dx - eyeSize,
+          leftEye.dy + eyeSize,
+        )
+        ..lineTo(
+          leftEye.dx + eyeSize,
+          leftEye.dy - eyeSize,
+        );
+
+      eyePath
+        ..moveTo(
+          rightEye.dx + eyeSize,
+          rightEye.dy + eyeSize,
+        )
+        ..lineTo(
+          rightEye.dx - eyeSize,
+          rightEye.dy - eyeSize,
+        )
+        ..moveTo(
+          rightEye.dx - eyeSize,
+          rightEye.dy + eyeSize,
+        )
+        ..lineTo(
+          rightEye.dx + eyeSize,
+          rightEye.dy - eyeSize,
+        );
+
+      canvas.drawPath(eyePath, _deadEyesPaint);
+    } else {
+      final eyeSize = min(_segmentSize.width, _segmentSize.height) * 0.08;
+      canvas.drawCircle(
+        leftEye,
+        eyeSize,
+        _eyesPaint,
+      );
+      canvas.drawCircle(
+        rightEye,
+        eyeSize,
+        _eyesPaint,
+      );
+    }
   }
 
   Offset _getOffset(Vector2 position) {
