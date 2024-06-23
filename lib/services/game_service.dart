@@ -13,9 +13,9 @@ import 'package:flutter_snake_game/enums/game_overlays.dart';
 import 'package:flutter_snake_game/extensions/int_extensions.dart';
 import 'package:flutter_snake_game/mixins/boardsize_mixin.dart';
 import 'package:flutter_snake_game/models/game_config.dart';
-import 'package:flutter_snake_game/painters/background_grid.dart';
-import 'package:flutter_snake_game/painters/fruit.dart';
-import 'package:flutter_snake_game/painters/snake.dart';
+import 'package:flutter_snake_game/components/background_grid.dart';
+import 'package:flutter_snake_game/components/fruit.dart';
+import 'package:flutter_snake_game/components/snake.dart';
 import 'package:flutter_snake_game/services/input_service.dart';
 import 'package:flutter_snake_game/services/lifecycle_service.dart';
 import 'package:flutter_snake_game/services/score_service.dart';
@@ -40,7 +40,7 @@ class GameService extends FlameGame
   GameConfig? _config;
   @override
   GameConfig get config {
-    _config ??= GameConfig.small();
+    _config ??= GameConfig.landscape();
     return _config!;
   }
 

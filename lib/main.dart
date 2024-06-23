@@ -1,7 +1,5 @@
-import 'package:flame/flame.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_snake_game/enums/game_overlays.dart';
 import 'package:flutter_snake_game/services/game_service.dart';
 import 'package:flutter_snake_game/services/score_service.dart';
@@ -10,7 +8,6 @@ import 'package:gap/gap.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  Flame.device.setOrientation(DeviceOrientation.portraitUp);
   runApp(MainGame());
 }
 
